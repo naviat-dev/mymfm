@@ -1,0 +1,20 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/_framework/*
+  Cache-Control: public, max-age=31536000, immutable
+
+*.wasm
+  Content-Type: application/wasm
+
+*.dll
+  Content-Type: application/octet-stream
+
+*.js
+  Content-Type: application/javascript
+
+*.css
+  Content-Type: text/css

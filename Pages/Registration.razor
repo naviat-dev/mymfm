@@ -1,0 +1,448 @@
+@page "/registration"
+
+<PageTitle>Registration</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="registration-container">
+	<MudPaper Elevation="8" Class="registration-card pa-8">
+		<!-- Progress Indicator -->
+		<MudProgressLinear Color="Color.Primary" Value="@ProgressPercentage" Class="mb-6" Size="Size.Medium"
+			Rounded="true" />
+
+		<MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">
+			Question @(currentQuestion + 1) of @totalQuestions
+		</MudText>
+
+		<!-- Question Container with Animation -->
+		<div class="question-container">
+			@foreach (var (question, index) in questions.Select((q, i) => (q, i)))
+			{
+				<div class="question-slide @GetQuestionClass(index)"
+					style="transform: translateX(@GetQuestionTransform(index));">
+
+					<MudText Typo="Typo.h5" Align="Align.Center" Class="mb-6 question-text" Color="Color.Primary">
+						@question.Text
+					</MudText>
+
+					@if (question.Type == QuestionType.Text)
+					{
+						<MudTextField @bind-Value="question.Answer" Label="@question.Label" Variant="Variant.Outlined"
+							FullWidth="true" Immediate="true" OnKeyUp="HandleKeyPress" Class="question-input"
+							Margin="Margin.Dense" />
+					}
+					else if (question.Type == QuestionType.Email)
+					{
+						<MudTextField @bind-Value="question.Answer" Label="@question.Label" Variant="Variant.Outlined"
+							InputType="InputType.Email" FullWidth="true" Immediate="true" OnKeyUp="HandleKeyPress"
+							Class="question-input" Margin="Margin.Dense" />
+					}
+					else if (question.Type == QuestionType.Date)
+					{
+						<MudDatePicker @bind-Date="question.DateAnswer" Label="@question.Label" Variant="Variant.Outlined"
+							Class="question-input" Margin="Margin.Dense" />
+					}
+					else if (question.Type == QuestionType.Select)
+					{
+						<MudSelect @bind-Value="question.Answer" Label="@question.Label" Variant="Variant.Outlined"
+							FullWidth="true" Class="question-input" Margin="Margin.Dense">
+							@foreach (var option in question.Options)
+							{
+								<MudSelectItem Value="@option">@option</MudSelectItem>
+							}
+						</MudSelect>
+					}
+					else if (question.Type == QuestionType.Phone)
+					{
+						<MudTextField @bind-Value="question.Answer" Label="@question.Label" Variant="Variant.Outlined"
+							InputType="InputType.Telephone" FullWidth="true" Immediate="true" OnKeyUp="HandleKeyPress"
+							Class="question-input" Margin="Margin.Dense" />
+					}
+					else if (question.Type == QuestionType.Checkbox)
+					{
+						<MudCheckBox @bind-Value="question.BoolAnswer" Label="@question.Label" Color="Color.Primary"
+							Class="question-input mt-4" />
+					}
+
+					@if (!string.IsNullOrEmpty(question.HelperText))
+					{
+						<MudText Typo="Typo.caption" Class="mt-2" Color="Color.Secondary">
+							@question.HelperText
+						</MudText>
+					}
+				</div>
+			}
+		</div>
+
+		<!-- Navigation Buttons -->
+		<MudStack Row="true" Justify="Justify.SpaceBetween" Class="mt-8">
+			<MudButton Variant="Variant.Text" StartIcon="Icons.Material.Filled.ArrowBack" OnClick="PreviousQuestion"
+				Disabled="@(currentQuestion == 0)" Color="Color.Default">
+				Back
+			</MudButton>
+
+			@if (currentQuestion < totalQuestions - 1)
+			{
+				<MudButton Variant="Variant.Filled" EndIcon="Icons.Material.Filled.ArrowForward" OnClick="NextQuestion"
+					Disabled="@(!IsCurrentQuestionValid())" Color="Color.Primary" Size="Size.Large">
+					Next
+				</MudButton>
+			}
+			else
+			{
+				<MudButton Variant="Variant.Filled" EndIcon="Icons.Material.Filled.CheckCircle" OnClick="SubmitRegistration"
+					Disabled="@(!IsCurrentQuestionValid())" Color="Color.Success" Size="Size.Large">
+					Complete
+				</MudButton>
+			}
+		</MudStack>
+	</MudPaper>
+</MudContainer>
+
+<!-- Success Dialog -->
+<MudDialog @bind-Visible="showSuccessDialog">
+	<DialogContent>
+		<MudStack AlignItems="AlignItems.Center" Spacing="4" Class="pa-4">
+			<MudIcon Icon="Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large"
+				Class="success-icon" />
+			<MudText Typo="Typo.h4" Align="Align.Center">
+				Registration Complete!
+			</MudText>
+			<MudText Typo="Typo.body1" Align="Align.Center">
+				Thank you for registering, <strong>@GetAnswer(0)</strong>!
+			</MudText>
+			<MudDivider Class="my-4" />
+			<MudText Typo="Typo.body2" Class="mt-2">
+				We've sent a confirmation to <strong>@GetAnswer(2)</strong>
+			</MudText>
+		</MudStack>
+	</DialogContent>
+	<DialogActions>
+		<MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="ResetForm">
+			Start New Registration
+		</MudButton>
+	</DialogActions>
+</MudDialog>
+
+<style>
+	.registration-container {
+		min-height: 80vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem 0;
+	}
+
+	.registration-card {
+		border-radius: 24px !important;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+		min-height: 500px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.question-container {
+		position: relative;
+		min-height: 280px;
+		overflow: hidden;
+		perspective: 1000px;
+	}
+
+	.question-slide {
+		position: absolute;
+		width: 100%;
+		opacity: 0;
+		transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+		pointer-events: none;
+	}
+
+	.question-slide.active {
+		position: relative;
+		opacity: 1;
+		transform: translateX(0) !important;
+		pointer-events: auto;
+	}
+
+	.question-slide.exiting-left {
+		opacity: 0;
+		transform: translateX(-100%) !important;
+	}
+
+	.question-slide.exiting-right {
+		opacity: 0;
+		transform: translateX(100%) !important;
+	}
+
+	.question-text {
+		font-weight: 500 !important;
+		line-height: 1.4 !important;
+		animation: fadeInScale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.question-input {
+		animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.success-icon {
+		animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	.mud-progress-linear {
+		height: 8px !important;
+	}
+
+	@@keyframes fadeInScale {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	@@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@@keyframes successBounce {
+		0% {
+			transform: scale(0);
+			opacity: 0;
+		}
+
+		50% {
+			transform: scale(1.2);
+		}
+
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	/* Mobile responsiveness */
+	@@media (max-width: 600px) {
+		.registration-card {
+			margin: 1rem;
+			padding: 1.5rem !important;
+		}
+
+		.question-text {
+			font-size: 1.25rem !important;
+		}
+	}
+</style>
+
+@code {
+	private int currentQuestion = 0;
+	private int totalQuestions => questions.Count;
+	private bool showSuccessDialog = false;
+
+	private double ProgressPercentage => ((double)(currentQuestion + 1) / totalQuestions) * 100;
+
+	private List<Question> questions = new()
+{
+new Question
+{
+Text = "What's your full name?",
+Label = "Full Name",
+Type = QuestionType.Text,
+HelperText = "Please enter your first and last name",
+Required = true
+},
+new Question
+{
+Text = "When were you born?",
+Label = "Date of Birth",
+Type = QuestionType.Date,
+HelperText = "We need this to verify your age",
+Required = true
+},
+new Question
+{
+Text = "What's your email address?",
+Label = "Email",
+Type = QuestionType.Email,
+HelperText = "We'll send your confirmation here",
+Required = true
+},
+new Question
+{
+Text = "What's your phone number?",
+Label = "Phone Number",
+Type = QuestionType.Phone,
+HelperText = "Include country code if international",
+Required = true
+},
+new Question
+{
+Text = "Which country do you live in?",
+Label = "Country",
+Type = QuestionType.Select,
+Options = new List<string> { "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "Spain",
+"Italy", "Other" },
+Required = true
+},
+new Question
+{
+Text = "What's your preferred language?",
+Label = "Language",
+Type = QuestionType.Select,
+Options = new List<string> { "English", "Spanish", "French", "German", "Mandarin", "Other" },
+Required = true
+},
+new Question
+{
+Text = "Would you like to receive updates?",
+Label = "Yes, I'd like to receive news and updates via email",
+Type = QuestionType.Checkbox,
+HelperText = "You can unsubscribe at any time",
+Required = false
+},
+new Question
+{
+Text = "Do you agree to our terms?",
+Label = "I agree to the Terms of Service and Privacy Policy",
+Type = QuestionType.Checkbox,
+Required = true
+}
+};
+
+	private string GetQuestionClass(int index)
+	{
+		if (index == currentQuestion)
+			return "active";
+
+		return "";
+	}
+
+	private string GetQuestionTransform(int index)
+	{
+		if (index == currentQuestion)
+			return "0";
+
+		if (index < currentQuestion)
+			return "-100%";
+
+		return "100%";
+	}
+
+	private void NextQuestion()
+	{
+		if (currentQuestion < totalQuestions - 1 && IsCurrentQuestionValid())
+		{
+			currentQuestion++;
+		}
+	}
+
+	private void PreviousQuestion()
+	{
+		if (currentQuestion > 0)
+		{
+			currentQuestion--;
+		}
+	}
+
+	private bool IsCurrentQuestionValid()
+	{
+		var question = questions[currentQuestion];
+
+		if (!question.Required)
+			return true;
+
+		return question.Type switch
+		{
+			QuestionType.Text => !string.IsNullOrWhiteSpace(question.Answer),
+			QuestionType.Email => !string.IsNullOrWhiteSpace(question.Answer) && question.Answer.Contains("@"),
+			QuestionType.Phone => !string.IsNullOrWhiteSpace(question.Answer),
+			QuestionType.Date => question.DateAnswer.HasValue,
+			QuestionType.Select => !string.IsNullOrWhiteSpace(question.Answer),
+			QuestionType.Checkbox => question.BoolAnswer,
+			_ => false
+		};
+	}
+
+	private async Task HandleKeyPress(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && IsCurrentQuestionValid())
+		{
+			if (currentQuestion < totalQuestions - 1)
+			{
+				NextQuestion();
+			}
+			else
+			{
+				await SubmitRegistration();
+			}
+		}
+	}
+
+	private async Task SubmitRegistration()
+	{
+		if (IsCurrentQuestionValid())
+		{
+			// Simulate API call
+			await Task.Delay(800);
+			showSuccessDialog = true;
+		}
+	}
+
+	private void ResetForm()
+	{
+		foreach (var question in questions)
+		{
+			question.Answer = string.Empty;
+			question.DateAnswer = null;
+			question.BoolAnswer = false;
+		}
+		currentQuestion = 0;
+		showSuccessDialog = false;
+	}
+
+	private string GetAnswer(int questionIndex)
+	{
+		if (questionIndex < 0 || questionIndex >= questions.Count)
+			return "";
+
+		var question = questions[questionIndex];
+		return question.Type switch
+		{
+			QuestionType.Date => question.DateAnswer?.ToString("MMMM dd, yyyy") ?? "",
+			QuestionType.Checkbox => question.BoolAnswer ? "Yes" : "No",
+			_ => question.Answer ?? ""
+		};
+	}
+
+	public class Question
+	{
+		public string Text { get; set; } = string.Empty;
+		public string Label { get; set; } = string.Empty;
+		public QuestionType Type { get; set; }
+		public string Answer { get; set; } = string.Empty;
+		public DateTime? DateAnswer { get; set; }
+		public bool BoolAnswer { get; set; }
+		public List<string> Options { get; set; } = new();
+		public string HelperText { get; set; } = string.Empty;
+		public bool Required { get; set; }
+	}
+
+	public enum QuestionType
+	{
+		Text,
+		Email,
+		Phone,
+		Date,
+		Select,
+		Checkbox
+	}
+}
