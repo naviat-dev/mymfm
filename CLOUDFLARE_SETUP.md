@@ -2,11 +2,11 @@
 
 ## Build Settings
 - **Build command**: `dotnet publish -c Release`
-- **Build output directory**: `bin/Release/net9.0/publish/wwwroot`
+- **Build output directory**: `bin/Release/net10.0/publish/wwwroot`
 - **Root directory**: `/` (repository root)
 
 ## Environment Variables (Set in Cloudflare Dashboard)
-- `DOTNET_VERSION`: `9.0.x`
+- `DOTNET_VERSION`: `10.0.x`
 - `NODE_VERSION`: `20` (for build tools if needed)
 
 ## Custom Headers (Optional)
