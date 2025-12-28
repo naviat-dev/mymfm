@@ -1,4 +1,4 @@
-@page "/registration"
+@page "/"
 
 <PageTitle>Registration</PageTitle>
 
@@ -254,10 +254,24 @@
 {
 new Question
 {
-Text = "What's your full name?",
-Label = "Full Name",
-Type = QuestionType.Text,
-HelperText = "Please enter your first and last name",
+Text = "What county do you live in?",
+Label = "Country",
+Type = QuestionType.Select,
+Options = new List<string> { 
+	// North America
+	"United States", "Canada",
+	// Caribbean
+	"Antigua and Barbuda", "Aruba", "Bahamas", "Barbados", "Belize", "Bermuda", 
+	"Bonaire", "British Virgin Islands", "Cayman Islands", "Cuba", "Curaçao", 
+	"Dominica", "Dominican Republic", "Grenada", "Guadeloupe", "Haiti", "Jamaica", 
+	"Martinique", "Montserrat", "Puerto Rico", "Saint Kitts and Nevis", 
+	"Saint Lucia", "Saint Vincent and the Grenadines", "Sint Maarten", 
+	"Trinidad and Tobago", "Turks and Caicos Islands", "U.S. Virgin Islands",
+	// South America
+	"Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador", 
+	"French Guiana", "Guyana", "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela"
+},
+HelperText = "Select from the map or use the dropdown below",
 Required = true
 },
 new Question
@@ -282,15 +296,6 @@ Text = "What's your phone number?",
 Label = "Phone Number",
 Type = QuestionType.Phone,
 HelperText = "Include country code if international",
-Required = true
-},
-new Question
-{
-Text = "Which country do you live in?",
-Label = "Country",
-Type = QuestionType.Select,
-Options = new List<string> { "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "Spain",
-"Italy", "Other" },
 Required = true
 },
 new Question
@@ -341,6 +346,14 @@ Required = true
 	{
 		if (currentQuestion < totalQuestions - 1 && IsCurrentQuestionValid())
 		{
+			var currentQ = questions[currentQuestion];
+			
+			// Check if we need to add/remove state/province question
+			if (currentQ.Type == QuestionType.Map || currentQ.Text == "Which country do you live in?")
+			{
+				HandleStateProvinceQuestion(currentQ.Answer);
+			}
+			
 			currentQuestion++;
 		}
 	}
@@ -367,6 +380,7 @@ Required = true
 			QuestionType.Phone => !string.IsNullOrWhiteSpace(question.Answer),
 			QuestionType.Date => question.DateAnswer.HasValue,
 			QuestionType.Select => !string.IsNullOrWhiteSpace(question.Answer),
+			QuestionType.Map => !string.IsNullOrWhiteSpace(question.Answer),
 			QuestionType.Checkbox => question.BoolAnswer,
 			_ => false
 		};
@@ -409,6 +423,76 @@ Required = true
 		showSuccessDialog = false;
 	}
 
+	private void HandleStateProvinceQuestion(string? country)
+	{
+		// Find the Map question index
+		int mapQuestionIndex = questions.FindIndex(q => q.Type == QuestionType.Map);
+		if (mapQuestionIndex == -1) return;
+
+		// Check if state/province question already exists
+		int stateProvinceIndex = mapQuestionIndex + 1;
+		bool hasStateProvince = stateProvinceIndex < questions.Count && 
+			(questions[stateProvinceIndex].Text == "Which state do you live in?" ||
+			 questions[stateProvinceIndex].Text == "Which province/territory do you live in?");
+
+		// Remove existing state/province question if it exists
+		if (hasStateProvince)
+		{
+			questions.RemoveAt(stateProvinceIndex);
+		}
+
+		// Add state/province question if needed
+		if (country == "United States")
+		{
+			var stateQuestion = new Question
+			{
+				Text = "Which state do you live in?",
+				Label = "State",
+				Type = QuestionType.Select,
+				Options = GetUSStates(),
+				Required = true
+			};
+			questions.Insert(stateProvinceIndex, stateQuestion);
+		}
+		else if (country == "Canada")
+		{
+			var provinceQuestion = new Question
+			{
+				Text = "Which province/territory do you live in?",
+				Label = "Province/Territory",
+				Type = QuestionType.Select,
+				Options = GetCanadianProvinces(),
+				Required = true
+			};
+			questions.Insert(stateProvinceIndex, provinceQuestion);
+		}
+	}
+
+	private List<string> GetUSStates()
+	{
+		return new List<string>
+		{
+			"Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+			"Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois",
+			"Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts",
+			"Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+			"New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+			"Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+			"Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+			"Wisconsin", "Wyoming"
+		};
+	}
+
+	private List<string> GetCanadianProvinces()
+	{
+		return new List<string>
+		{
+			"Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
+			"Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
+			"Quebec", "Saskatchewan", "Yukon"
+		};
+	}
+
 	private string GetAnswer(int questionIndex)
 	{
 		if (questionIndex < 0 || questionIndex >= questions.Count)
@@ -443,6 +527,7 @@ Required = true
 		Phone,
 		Date,
 		Select,
-		Checkbox
+		Checkbox,
+		Map
 	}
 }
