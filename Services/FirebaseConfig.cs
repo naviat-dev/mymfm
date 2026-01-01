@@ -6,3 +6,8 @@ public class FirebaseConfig
 	public string ApiKey { get; set; } = string.Empty;
 	public string AuthDomain { get; set; } = string.Empty;
 }
+
+public class AppSettings
+{
+	public FirebaseConfig Firebase { get; set; } = new();
+}

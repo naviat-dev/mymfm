@@ -14,8 +14,9 @@ builder.Services.AddMudServices();
 
 // Configure Firebase
 var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-var firebaseConfig = await http.GetFromJsonAsync<FirebaseConfig>("appsettings.json");
-builder.Services.AddSingleton(firebaseConfig ?? new FirebaseConfig());
+var appSettings = await http.GetFromJsonAsync<AppSettings>("appsettings.json");
+var firebaseConfig = appSettings?.Firebase ?? new FirebaseConfig();
+builder.Services.AddSingleton(firebaseConfig);
 builder.Services.AddScoped<FirebaseAuthService>();
 builder.Services.AddScoped<FirebaseService>();
 

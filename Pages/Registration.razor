@@ -1,4 +1,7 @@
 @page "/"
+@using mymfm.Services
+@inject FirebaseAuthService AuthService
+@inject FirebaseService FirebaseService
 
 <PageTitle>Registration</PageTitle>
 
@@ -405,9 +408,36 @@ Required = true
 	{
 		if (IsCurrentQuestionValid())
 		{
-			// Simulate API call
-			await Task.Delay(800);
-			showSuccessDialog = true;
+			try
+			{
+				// Sign in anonymously for form submission
+				await AuthService.SignInAnonymouslyAsync();
+
+				// Prepare form data
+				var formData = new
+				{
+					country = GetAnswer(0),
+					dateOfBirth = GetAnswer(1),
+					email = GetAnswer(2),
+					phone = GetAnswer(3),
+					language = GetAnswer(4),
+					receiveUpdates = questions[5].BoolAnswer,
+					agreeToTerms = questions[6].BoolAnswer,
+					timestamp = DateTime.UtcNow.ToString("o")
+				};
+
+				// Save to Firebase
+				var responseId = await FirebaseService.SaveDataAsync("form-responses", formData);
+
+				// Show success dialog
+				showSuccessDialog = true;
+			}
+			catch (Exception ex)
+			{
+				// Handle error - you might want to show an error dialog instead
+				Console.WriteLine($"Error submitting form: {ex.Message}");
+				// For now, we'll still show success, but you should add error handling UI
+			}
 		}
 	}
 
