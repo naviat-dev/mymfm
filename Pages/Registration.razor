@@ -47,7 +47,7 @@
 					{
 						<MudSelect @bind-Value="question.Answer" Label="@question.Label" Variant="Variant.Outlined"
 							FullWidth="true" Class="question-input" Margin="Margin.Dense">
-							@foreach (var option in question.Options)
+							@foreach (string option in question.Options)
 							{
 								<MudSelectItem Value="@option">@option</MudSelectItem>
 							}
@@ -349,7 +349,7 @@ Required = true
 	{
 		if (currentQuestion < totalQuestions - 1 && IsCurrentQuestionValid())
 		{
-			var currentQ = questions[currentQuestion];
+			Question currentQ = questions[currentQuestion];
 			
 			// Check if we need to add/remove state/province question
 			if (currentQ.Type == QuestionType.Map || currentQ.Text == "Which country do you live in?")
@@ -371,7 +371,7 @@ Required = true
 
 	private bool IsCurrentQuestionValid()
 	{
-		var question = questions[currentQuestion];
+		Question question = questions[currentQuestion];
 
 		if (!question.Required)
 			return true;
@@ -427,7 +427,7 @@ Required = true
 				};
 
 				// Save to Firebase
-				var responseId = await FirebaseService.SaveDataAsync("form-responses", formData);
+				string responseId = await FirebaseService.SaveDataAsync("form-responses", formData);
 
 				// Show success dialog
 				showSuccessDialog = true;
@@ -443,7 +443,7 @@ Required = true
 
 	private void ResetForm()
 	{
-		foreach (var question in questions)
+		foreach (Question question in questions)
 		{
 			question.Answer = string.Empty;
 			question.DateAnswer = null;
@@ -474,7 +474,7 @@ Required = true
 		// Add state/province question if needed
 		if (country == "United States")
 		{
-			var stateQuestion = new Question
+			Question stateQuestion = new Question
 			{
 				Text = "Which state do you live in?",
 				Label = "State",
@@ -486,7 +486,7 @@ Required = true
 		}
 		else if (country == "Canada")
 		{
-			var provinceQuestion = new Question
+			Question provinceQuestion = new Question
 			{
 				Text = "Which province/territory do you live in?",
 				Label = "Province/Territory",
@@ -528,7 +528,7 @@ Required = true
 		if (questionIndex < 0 || questionIndex >= questions.Count)
 			return "";
 
-		var question = questions[questionIndex];
+		Question question = questions[questionIndex];
 		return question.Type switch
 		{
 			QuestionType.Date => question.DateAnswer?.ToString("MMMM dd, yyyy") ?? "",

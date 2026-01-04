@@ -10,7 +10,7 @@ public class FirebaseAuthService
 
 	public FirebaseAuthService(FirebaseConfig config)
 	{
-		var authConfig = new FirebaseAuthConfig
+		FirebaseAuthConfig authConfig = new()
 		{
 			ApiKey = config.ApiKey,
 			AuthDomain = config.AuthDomain,
