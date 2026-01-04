@@ -13,11 +13,25 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddMudServices();
 
 // Configure Firebase
-HttpClient http = new() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-AppSettings? appSettings = await http.GetFromJsonAsync<AppSettings>("appsettings.json");
-FirebaseConfig firebaseConfig = appSettings?.Firebase ?? new FirebaseConfig();
-builder.Services.AddSingleton(firebaseConfig);
-builder.Services.AddScoped<FirebaseAuthService>();
-builder.Services.AddScoped<FirebaseService>();
+try
+{
+	HttpClient http = new() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+	AppSettings? appSettings = await http.GetFromJsonAsync<AppSettings>("appsettings.json");
+	FirebaseConfig firebaseConfig = appSettings?.Firebase ?? new FirebaseConfig();
+
+	Console.WriteLine($"Firebase Config Loaded: ApiKey={!string.IsNullOrEmpty(firebaseConfig.ApiKey)}");
+
+	builder.Services.AddSingleton(firebaseConfig);
+	builder.Services.AddScoped<FirebaseAuthService>();
+	builder.Services.AddScoped<FirebaseService>();
+}
+catch (Exception ex)
+{
+	Console.WriteLine($"Error loading Firebase config: {ex.Message}");
+	// Provide empty config as fallback
+	builder.Services.AddSingleton(new FirebaseConfig());
+	builder.Services.AddScoped<FirebaseAuthService>();
+	builder.Services.AddScoped<FirebaseService>();
+}
 
 await builder.Build().RunAsync();
