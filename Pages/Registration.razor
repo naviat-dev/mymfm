@@ -252,111 +252,125 @@
 
 	private double ProgressPercentage => totalQuestions > 0 ? ((double)(currentQuestion + 1) / totalQuestions) * 100 : 0;
 
-	private List<Question> questions = new()
-{
-new Question
-{
-Id = "country",
-Text = "What is your country of residence?",
-Label = "Country",
-Type = QuestionType.Select,
-Options = new List<string> { "United States of America", "Canada", "Caribbean" },
-Required = true
-},
-new Question
-{
-Id = "region",
-Text = "Which region do you live in?",
-Label = "Region",
-Type = QuestionType.Select,
-Options = new List<string> { "Region 1", "Region 2", "Region 3", "Region 4" },
-Required = true
-},
-new Question
-{
-Id = "firstName",
-Text = "What is your first name?",
-Label = "First Name",
-Type = QuestionType.Text,
-Required = true
-},
-new Question
-{
-Id = "lastName",
-Text = "What is your last name?",
-Label = "Last Name",
-Type = QuestionType.Text,
-Required = true
-},
-new Question
-{
-Id = "email",
-Text = "What's your email address?",
-Label = "Email",
-Type = QuestionType.Email,
-Required = true
-},
-new Question
-{
-Id = "phone",
-Text = "What's your phone number?",
-Label = "Phone Number",
-Type = QuestionType.Phone,
-Required = true
-},
-new Question
-{
-Id = "gender",
-Text = "What is your gender?",
-Label = "Gender",
-Type = QuestionType.Select,
-Options = new List<string> { "Male", "Female" },
-Required = true
-},
-new Question
-{
-Id = "stateOfResidence",
-Text = "What is your state of residence?",
-Label = "State of Residence",
-Type = QuestionType.Text,
-Required = true
-},
-new Question
-{
-Id = "age",
-Text = "What is your age range?",
-Label = "Age",
-Type = QuestionType.Select,
-Options = new List<string> { "3-6", "7-11", "12-18", "19-24", "25-34", "35-44", "45+" },
-Required = true
-},
-new Question
-{
-Id = "parentalConsent",
-Text = "Do you have parental consent?",
-Label = "I have parental consent to participate",
-Type = QuestionType.Checkbox,
-Required = true
-},
-new Question
-{
-Id = "maritalStatus",
-Text = "What is your marital status?",
-Label = "Marital Status",
-Type = QuestionType.Select,
-Options = new List<string> { "Single", "Married" },
-Required = true
-},
-new Question
-{
-Id = "campusCommunity",
-Text = "What is your campus community role?",
-Label = "Campus Community",
-Type = QuestionType.Select,
-Options = new List<string> { "College Student", "Faculty", "Staff" },
-Required = true
-}
-};
+	private List<Question> questions = [
+		new Question
+		{
+			Id = "country",
+			Text = "What is your country of residence?",
+			Label = "Country",
+			Type = QuestionType.Select,
+			Options = ["United States of America", "Canada", "Caribbean"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "stateUS",
+			Text = "Which state do you live in?",
+			Label = "State",
+			Type = QuestionType.Select,
+			Options = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida",
+			"Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+			"Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+			"New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+			"Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+			"West Virginia", "Wisconsin", "Wyoming"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "stateCA",
+			Text = "Which state do you live in?",
+			Label = "State",
+			Type = QuestionType.Select,
+			Options = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories",
+			"Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "firstName",
+			Text = "What is your first name?",
+			Label = "First Name",
+			Type = QuestionType.Text,
+			Required = true
+		},
+		new Question
+		{
+			Id = "lastName",
+			Text = "What is your last name?",
+			Label = "Last Name",
+			Type = QuestionType.Text,
+			Required = true
+		},
+		new Question
+		{
+			Id = "email",
+			Text = "What's your email address?",
+			Label = "Email",
+			Type = QuestionType.Email,
+			Required = true
+		},
+		new Question
+		{
+			Id = "phone",
+			Text = "What's your phone number?",
+			Label = "Phone Number",
+			Type = QuestionType.Phone,
+			Required = true
+		},
+		new Question
+		{
+			Id = "gender",
+			Text = "What is your gender?",
+			Label = "Gender",
+			Type = QuestionType.Select,
+			Options = ["Male", "Female"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "stateOfResidence",
+			Text = "What is your state of residence?",
+			Label = "State of Residence",
+			Type = QuestionType.Text,
+			Required = true
+		},
+		new Question
+		{
+			Id = "age",
+			Text = "What is your age range?",
+			Label = "Age",
+			Type = QuestionType.Select,
+			Options = ["3-6", "7-11", "12-18", "19-24", "25-34", "35-44", "45+"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "parentalConsent",
+			Text = "Do you have parental consent?",
+			Label = "I have parental consent to participate",
+			Type = QuestionType.Checkbox,
+			Required = true
+		},
+		new Question
+		{
+			Id = "maritalStatus",
+			Text = "What is your marital status?",
+			Label = "Marital Status",
+			Type = QuestionType.Select,
+			Options = ["Single", "Married"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "campusCommunity",
+			Text = "What is your campus community role?",
+			Label = "Campus Community",
+			Type = QuestionType.Select,
+			Options = ["College Student", "Faculty", "Staff"],
+			Required = true
+		}
+	];
 
 	private bool ShouldShowQuestion(string questionId)
 	{
@@ -365,7 +379,8 @@ Required = true
 
 		return questionId switch
 		{
-			"region" => country == "United States of America" || country == "Canada",
+			"stateUS" => country == "United States of America",
+			"stateCA" => country == "Canada",
 			"parentalConsent" => age == "3-6" || age == "7-11",
 			"maritalStatus" => age == "19-24" || age == "25-34" || age == "35-44" || age == "45+",
 			_ => true
@@ -494,14 +509,14 @@ Required = true
 
 	public class Question
 	{
-public string Id { get; set; } = string.Empty;
+		public string Id { get; set; } = string.Empty;
 		public string Text { get; set; } = string.Empty;
 		public string Label { get; set; } = string.Empty;
 		public QuestionType Type { get; set; }
 		public string Answer { get; set; } = string.Empty;
 		public DateTime? DateAnswer { get; set; }
 		public bool BoolAnswer { get; set; }
-		public List<string> Options { get; set; } = new();
+		public List<string> Options { get; set; } = [];
 		public string HelperText { get; set; } = string.Empty;
 		public bool Required { get; set; }
 	}
@@ -513,6 +528,6 @@ public string Id { get; set; } = string.Empty;
 		Phone,
 		Date,
 		Select,
-	Checkbox
+		Checkbox
 	}
 }
