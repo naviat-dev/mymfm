@@ -4,8 +4,11 @@
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
 
-/_framework/*
-  Cache-Control: public, max-age=31536000, immutable
+*.js
+  Content-Type: application/javascript
+
+*.css
+  Content-Type: text/css
 
 *.wasm
   Content-Type: application/wasm
@@ -13,8 +16,5 @@
 *.dll
   Content-Type: application/octet-stream
 
-*.js
-  Content-Type: application/javascript
-
-*.css
-  Content-Type: text/css
+/_framework/*
+  Cache-Control: public, max-age=31536000, immutable
