@@ -10,60 +10,79 @@ env:
   DOTNET_VERSION: '10.0.x'
 
 jobs:
+  # -------------------------
   # Continuous Integration
+  # -------------------------
   build-and-test:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Checkout code
+        uses: actions/checkout@v4
         
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
           
-    - name: Restore dependencies
-      run: dotnet restore
-      
-    - name: Build application
-      run: dotnet build --no-restore --configuration Release
-      
-    - name: Security audit
-      run: dotnet list package --vulnerable --include-transitive
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+            
+      - name: Restore dependencies
+        run: dotnet restore
+        
+      - name: Build application
+        run: dotnet build --no-restore --configuration Release
+        
+      - name: Security audit
+        run: dotnet list package --vulnerable --include-transitive
 
-  # Build and Deploy to Cloudflare Pages
-  deploy:
+  # -------------------------
+  # Deploy static site to Cloudflare Pages branch
+  # -------------------------
+  deploy-pages:
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-    
+
+    # Only deploy on direct pushes to main, not PRs
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: write
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-        
-    - name: Restore dependencies
-      run: dotnet restore
-      
-    - name: Publish application
-      run: dotnet publish -c Release -o ./dist
-      
-    - name: Deploy to Cloudflare Pages
-      uses: cloudflare/wrangler-action@v3
-      with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: pages deploy ./dist/wwwroot --project-name=mymfm
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish application
+        run: dotnet publish -c Release -o publish
+
+      - name: Prepare pages directory
+        run: |
+          mkdir -p pages
+          cp -r publish/wwwroot/* pages/
+
+      - name: Push to pages branch
+        run: |
+          cd pages
+          git init
+          git checkout -b pages
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Deploy static site"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push --force origin pages
