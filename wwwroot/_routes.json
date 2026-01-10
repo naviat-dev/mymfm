@@ -25,5 +25,6 @@
 		"*.woff2",
 		"*.ttf",
 		"*.eot"
-	]
+	],
+	"serve": "/index.html"
 }
