@@ -1,14 +1,14 @@
+/_framework/*.wasm
+  Content-Type: application/wasm
+
+/_framework/*.js
+  Content-Type: application/javascript
+
 /*.js
   Content-Type: application/javascript
 
 /*.css
   Content-Type: text/css
-
-/*.wasm
-  Content-Type: application/wasm
-
-/*.dll
-  Content-Type: application/octet-stream
 
 /*.json
   Content-Type: application/json
@@ -19,5 +19,4 @@
 /*
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
-  X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
