@@ -515,9 +515,26 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		},
 		new Question
 		{
+			Id = "collegeAffiliation",
+			Text = "Are you a college student, faculty, or staff?",
+			Label = "College Affiliation",
+			Type = QuestionType.Select,
+			Options = ["Yes", "No"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "schoolName",
+			Text = "What is the name of your school?",
+			Label = "School Name",
+			Type = QuestionType.Text,
+			Required = true
+		},
+		new Question
+		{
 			Id = "campusCommunity",
-			Text = "What is your campus community role?",
-			Label = "Campus Community",
+			Text = "What is your role?",
+			Label = "Campus Role",
 			Type = QuestionType.Select,
 			Options = ["College Student", "Faculty", "Staff"],
 			Required = true
@@ -528,6 +545,7 @@ By scrolling to the bottom and proceeding, I/We certify that:
 	{
 		var country = questions.FirstOrDefault(q => q.Id == "country")?.Answer;
 		var age = questions.FirstOrDefault(q => q.Id == "age")?.Answer;
+		var collegeAffiliation = questions.FirstOrDefault(q => q.Id == "collegeAffiliation")?.Answer;
 
 		return questionId switch
 		{
@@ -542,6 +560,9 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			"parentName" => age == "3-6" || age == "7-11" || age == "12-17",
 			"childName" => age == "3-6" || age == "7-11" || age == "12-17",
 			"maritalStatus" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
+			"collegeAffiliation" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
+			"schoolName" => collegeAffiliation == "Yes",
+			"campusCommunity" => collegeAffiliation == "Yes",
 			_ => true
 		};
 	}
