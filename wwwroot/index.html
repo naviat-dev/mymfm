@@ -33,6 +33,17 @@
 	<script src="_framework/blazor.webassembly.js"></script>
 	<!-- MudBlazor JS -->
 	<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+	
+	<script>
+		window.checkScrollPosition = function(elementId) {
+			var element = document.getElementById(elementId);
+			if (!element) return false;
+			
+			// Check if scrolled to bottom (with 5px threshold)
+			var isAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 5;
+			return isAtBottom;
+		}
+	</script>
 </body>
 
 </html>

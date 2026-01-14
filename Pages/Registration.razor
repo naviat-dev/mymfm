@@ -1,7 +1,9 @@
 @page "/"
 @using mymfm.Services
+@using Microsoft.JSInterop
 @inject FirebaseAuthService AuthService
 @inject FirebaseService FirebaseService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Registration</PageTitle>
 
@@ -66,6 +68,29 @@
 					{
 						<MudCheckBox @bind-Value="question.BoolAnswer" Label="@question.Label" Color="Color.Primary"
 							Class="question-input mt-4" />
+					}
+					else if (question.Type == QuestionType.ScrollableText)
+					{
+						var elementId = $"consent-{question.Id}";
+						<MudPaper Class="scrollable-consent-box" Elevation="2">
+							<div id="@elementId" class="consent-content" @onscroll="@(async () => await CheckScrollPosition(elementId, question))">
+								<MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+									@question.ScrollableContent
+								</MudText>
+							</div>
+						</MudPaper>
+						@if (!question.HasScrolledToBottom)
+						{
+							<MudText Typo="Typo.caption" Color="Color.Error" Class="mt-2">
+								Please scroll to the bottom to continue
+							</MudText>
+						}
+						else
+						{
+							<MudText Typo="Typo.caption" Color="Color.Success" Class="mt-2">
+								✓ You have read the complete agreement
+							</MudText>
+						}
 					}
 
 					@if (!string.IsNullOrEmpty(question.HelperText))
@@ -232,6 +257,36 @@
 		}
 	}
 
+	.scrollable-consent-box {
+		border-radius: 8px !important;
+		overflow: hidden;
+		margin-top: 1rem;
+	}
+
+	.consent-content {
+		max-height: 300px;
+		overflow-y: auto;
+		padding: 1.5rem;
+		line-height: 1.6;
+	}
+
+	.consent-content::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.consent-content::-webkit-scrollbar-track {
+		background: #f1f1f1;
+	}
+
+	.consent-content::-webkit-scrollbar-thumb {
+		background: #888;
+		border-radius: 4px;
+	}
+
+	.consent-content::-webkit-scrollbar-thumb:hover {
+		background: #555;
+	}
+
 	/* Mobile responsiveness */
 	@@media (max-width: 600px) {
 		.registration-card {
@@ -241,6 +296,11 @@
 
 		.question-text {
 			font-size: 1.25rem !important;
+		}
+
+		.consent-content {
+			max-height: 250px;
+			padding: 1rem;
 		}
 	}
 </style>
@@ -333,15 +393,115 @@
 			Text = "What is your age range?",
 			Label = "Age",
 			Type = QuestionType.Select,
-			Options = ["3-6", "7-11", "12-18", "19-24", "25-34", "35-44", "45+"],
+			Options = ["3-6", "7-11", "12-17", "18-24", "25-34", "35-44", "45+"],
 			Required = true
 		},
 		new Question
 		{
-			Id = "parentalConsent",
-			Text = "Do you have parental consent?",
-			Label = "I have parental consent to participate",
+			Id = "parentalConsentText",
+			Text = "Parental Consent, Release, and Disciplinary Agreement",
+			Label = "Please read the entire agreement",
+			Type = QuestionType.ScrollableText,
+			ScrollableContent = @"PARENTAL CONSENT, RELEASE, AND DISCIPLINARY AGREEMENT
+
+1.0 Parental Consent and Liability Release
+
+I/We, the undersigned parent(s) or legal guardian(s), hereby grant permission for my/our child or youth (""Participant"") to participate in youth programs, activities, events, and travel sponsored by Mountain of Fire and Miracles Ministries (MFM).
+
+In consideration of the Participant's acceptance and participation in activities scheduled from July 16, 2026 through July 19, 2026, I/we, on behalf of myself/ourselves and the Participant, hereby release, waive, discharge, and covenant not to sue Mountain of Fire and Miracles Ministries, its directors, officers, employees, agents, volunteers, and affiliates from any and all claims, demands, actions, or causes of action, whether known or unknown, arising out of or related to participation in such programs, including but not limited to personal injury, illness, death, property damage, or associated expenses.
+
+I/We further acknowledge and assume all risks, both known and unknown, associated with the Participant's involvement in recreational, ministry, travel, and work-related activities.
+
+Authorization is hereby granted for MFM to provide or arrange transportation, meals, lodging, and supervision as deemed necessary for the Participant.
+
+I/We agree to indemnify and hold harmless Mountain of Fire and Miracles Ministries and its representatives from any liability, loss, or expense (including reasonable attorney's fees) arising from the negligent, willful, or intentional acts of the Participant.
+
+2.0 Medical Authorization
+
+If the Participant is under the age of eighteen (18), I/we hereby authorize Mountain of Fire and Miracles Ministries to secure medical treatment, including emergency care, for the Participant in the event of illness or injury.
+
+I/We accept full financial responsibility for all medical expenses incurred. Should it become necessary for the Participant to return home due to medical reasons, disciplinary action, or other circumstances, I/we agree to assume all associated transportation costs.
+
+3.0 Consent and Disciplinary Agreement
+
+I/We consent to the Participant's voluntary participation in the MFM Americas & Caribbean Youth Convention, to be held from July 16 through July 19, 2026.
+
+I/We acknowledge that participation is voluntary and agree not to hold Mountain of Fire and Miracles Ministries liable for any loss or injury arising from participation, except as prohibited by law.
+
+I/We further acknowledge that the Participant is required to abide by all rules, policies, and behavioral standards established by MFM, its leaders, and supervisory personnel.
+
+I/We understand that serious misconduct or significant violations of these rules may result in dismissal from the program. In such cases:
+• I/We assume responsibility for return transportation costs
+• I/We acknowledge that no refund will be issued
+
+Such action will be taken only in exceptional circumstances and after reasonable consultation with the Participant's pastors, parents, or guardians.
+
+4.0 Acknowledgment and Agreement
+
+By scrolling to the bottom and proceeding, I/We certify that:
+• I/We have read this document in its entirety
+• I/We fully understand its contents
+• I/We voluntarily agree to all terms and conditions stated herein",
+			Required = true
+		},
+		new Question
+		{
+			Id = "medicalConditions",
+			Text = "Are there any medical conditions we should be aware of?",
+			Label = "Medical conditions (if any)",
+			Type = QuestionType.Text,
+			HelperText = "Leave blank if none",
+			Required = false
+		},
+		new Question
+		{
+			Id = "allergies",
+			Text = "Does the participant have any allergies?",
+			Label = "Allergies (if any)",
+			Type = QuestionType.Text,
+			HelperText = "Leave blank if none",
+			Required = false
+		},
+		new Question
+		{
+			Id = "medications",
+			Text = "Will the participant be bringing any medication?",
+			Label = "Medications (if any)",
+			Type = QuestionType.Text,
+			HelperText = "Leave blank if none",
+			Required = false
+		},
+		new Question
+		{
+			Id = "foodAllergies",
+			Text = "Does the participant have any food allergies?",
+			Label = "Food allergies (if any)",
+			Type = QuestionType.Text,
+			HelperText = "Leave blank if none",
+			Required = false
+		},
+		new Question
+		{
+			Id = "consentCheckbox",
+			Text = "Do you agree to the Terms and Conditions?",
+			Label = "I agree to the Terms and Conditions stated above",
 			Type = QuestionType.Checkbox,
+			Required = true
+		},
+		new Question
+		{
+			Id = "parentName",
+			Text = "What is the parent or legal guardian's full name?",
+			Label = "Parent/Guardian Full Name",
+			Type = QuestionType.Text,
+			Required = true
+		},
+		new Question
+		{
+			Id = "childName",
+			Text = "What is the child's full name?",
+			Label = "Child's Full Name",
+			Type = QuestionType.Text,
 			Required = true
 		},
 		new Question
@@ -373,8 +533,15 @@
 		{
 			"stateUS" => country == "United States of America",
 			"stateCA" => country == "Canada",
-			"parentalConsent" => age == "3-6" || age == "7-11",
-			"maritalStatus" => age == "19-24" || age == "25-34" || age == "35-44" || age == "45+",
+			"parentalConsentText" => age == "3-6" || age == "7-11" || age == "12-17",
+			"medicalConditions" => age == "3-6" || age == "7-11" || age == "12-17",
+			"allergies" => age == "3-6" || age == "7-11" || age == "12-17",
+			"medications" => age == "3-6" || age == "7-11" || age == "12-17",
+			"foodAllergies" => age == "3-6" || age == "7-11" || age == "12-17",
+			"consentCheckbox" => age == "3-6" || age == "7-11" || age == "12-17",
+			"parentName" => age == "3-6" || age == "7-11" || age == "12-17",
+			"childName" => age == "3-6" || age == "7-11" || age == "12-17",
+			"maritalStatus" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
 			_ => true
 		};
 	}
@@ -437,6 +604,7 @@
 			QuestionType.Date => question.DateAnswer.HasValue,
 			QuestionType.Select => !string.IsNullOrWhiteSpace(question.Answer),
 			QuestionType.Checkbox => question.BoolAnswer,
+			QuestionType.ScrollableText => question.HasScrolledToBottom,
 			_ => false
 		};
 	}
@@ -494,9 +662,36 @@
 			question.Answer = string.Empty;
 			question.DateAnswer = null;
 			question.BoolAnswer = false;
+			question.HasScrolledToBottom = false;
 		}
 		currentQuestion = 0;
 		showSuccessDialog = false;
+	}
+
+	private async Task HandleScroll(Microsoft.AspNetCore.Components.Web.WheelEventArgs e, Question question)
+	{
+		// This is a placeholder - actual scroll detection happens via JavaScript interop
+		// For now, we'll mark as scrolled after any scroll event
+		await Task.Delay(100);
+		question.HasScrolledToBottom = true;
+		StateHasChanged();
+	}
+
+	private async Task CheckScrollPosition(string elementId, Question question)
+	{
+		try
+		{
+			var hasScrolledToBottom = await JSRuntime.InvokeAsync<bool>("checkScrollPosition", elementId);
+			if (hasScrolledToBottom && !question.HasScrolledToBottom)
+			{
+				question.HasScrolledToBottom = true;
+				StateHasChanged();
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error checking scroll position: {ex.Message}");
+		}
 	}
 
 	public class Question
@@ -511,6 +706,8 @@
 		public List<string> Options { get; set; } = [];
 		public string HelperText { get; set; } = string.Empty;
 		public bool Required { get; set; }
+		public string ScrollableContent { get; set; } = string.Empty;
+		public bool HasScrolledToBottom { get; set; } = false;
 	}
 
 	public enum QuestionType
@@ -520,6 +717,7 @@
 		Phone,
 		Date,
 		Select,
-		Checkbox
+		Checkbox,
+		ScrollableText
 	}
 }
