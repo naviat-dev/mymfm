@@ -2,7 +2,7 @@
 
 ## Build Settings
 - **Build command**: `dotnet publish -c Release`
-- **Build output directory**: `bin/Release/net10.0/publish/wwwroot`
+- **Build output directory**: `bin/Release/net10.0/publish`
 - **Root directory**: `/` (repository root)
 
 ## Environment Variables (Set in Cloudflare Dashboard)

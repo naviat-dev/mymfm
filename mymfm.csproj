@@ -14,4 +14,12 @@
 		<PackageReference Include="MudBlazor" Version="8.15.0" />
 	</ItemGroup>
 
+	<!-- Copy functions folder to publish output for Cloudflare Pages -->
+	<Target Name="CopyFunctionsToPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<FunctionsFiles Include="functions\**\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(FunctionsFiles)" DestinationFolder="$(PublishDir)wwwroot\functions\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	</Target>
+
 </Project>
