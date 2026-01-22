@@ -8,7 +8,12 @@
 
 <PageTitle>Registration</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="registration-container">
+<MudContainer MaxWidth="MaxWidth.Large" Class="registration-container">
+	<!-- Banner Image -->
+	<div class="banner-container">
+		<img src="banner.png" alt="MFM Registration Banner" class="banner-image" />
+	</div>
+
 	<MudPaper Elevation="8" Class="registration-card pa-8">
 		<!-- Progress Indicator -->
 		<MudProgressLinear Color="Color.Primary" Value="@ProgressPercentage" Class="mb-6" Size="Size.Medium"
@@ -204,9 +209,27 @@
 	.registration-container {
 		min-height: 80vh;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		padding: 2rem 0;
+	}
+
+	.banner-container {
+		width: 100%;
+		max-width: 1200px;
+		margin-bottom: 2rem;
+		border-radius: 16px;
+		overflow: hidden;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	}
+
+	.banner-image {
+		width: 100%;
+		height: auto;
+		display: block;
+		max-height: 300px;
+		object-fit: cover;
 	}
 
 	.registration-card {
