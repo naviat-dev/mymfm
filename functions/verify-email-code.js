@@ -1,4 +1,21 @@
 // Cloudflare Pages Function to verify email code
+
+// CORS headers
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'POST, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type',
+	'Content-Type': 'application/json'
+};
+
+// Handle OPTIONS request for CORS preflight
+export async function onRequestOptions() {
+	return new Response(null, {
+		status: 204,
+		headers: corsHeaders
+	});
+}
+
 export async function onRequestPost(context) {
 	try {
 		const { request, env } = context;
@@ -8,7 +25,7 @@ export async function onRequestPost(context) {
 		if (!email || !code) {
 			return new Response(JSON.stringify({ error: 'Email and code are required' }), {
 				status: 400,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -21,7 +38,7 @@ export async function onRequestPost(context) {
 				error: 'Code expired or not found'
 			}), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -35,7 +52,7 @@ export async function onRequestPost(context) {
 				error: 'Code has expired'
 			}), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -48,7 +65,7 @@ export async function onRequestPost(context) {
 				error: 'Too many attempts. Please request a new code.'
 			}), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -65,7 +82,7 @@ export async function onRequestPost(context) {
 			await env.EMAIL_VERIFICATION.delete(`verification:${email}`);
 			return new Response(JSON.stringify({ valid: true }), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -74,14 +91,14 @@ export async function onRequestPost(context) {
 			error: 'Invalid code'
 		}), {
 			status: 200,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 
 	} catch (error) {
 		console.error('Error:', error);
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 	}
 }

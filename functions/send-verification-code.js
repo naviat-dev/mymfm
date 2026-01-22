@@ -1,4 +1,21 @@
 // Cloudflare Pages Function to send verification email
+
+// CORS headers
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'POST, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type',
+	'Content-Type': 'application/json'
+};
+
+// Handle OPTIONS request for CORS preflight
+export async function onRequestOptions() {
+	return new Response(null, {
+		status: 204,
+		headers: corsHeaders
+	});
+}
+
 export async function onRequestPost(context) {
 	try {
 		const { request, env } = context;
@@ -8,7 +25,7 @@ export async function onRequestPost(context) {
 		if (!email || !email.includes('@')) {
 			return new Response(JSON.stringify({ error: 'Invalid email address' }), {
 				status: 400,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
@@ -65,20 +82,20 @@ export async function onRequestPost(context) {
 			console.error('Postmark error:', errorData);
 			return new Response(JSON.stringify({ error: 'Failed to send email' }), {
 				status: 500,
-				headers: { 'Content-Type': 'application/json' }
+				headers: corsHeaders
 			});
 		}
 
 		return new Response(JSON.stringify({ success: true }), {
 			status: 200,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 
 	} catch (error) {
 		console.error('Error:', error);
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 	}
 }
