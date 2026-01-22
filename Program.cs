@@ -24,6 +24,9 @@ try
 	builder.Services.AddSingleton(firebaseConfig);
 	builder.Services.AddScoped<FirebaseAuthService>();
 	builder.Services.AddScoped<FirebaseService>();
+
+	// Register EmailVerificationService as singleton to maintain state
+	builder.Services.AddSingleton<EmailVerificationService>();
 }
 catch (Exception ex)
 {
@@ -32,6 +35,7 @@ catch (Exception ex)
 	builder.Services.AddSingleton(new FirebaseConfig());
 	builder.Services.AddScoped<FirebaseAuthService>();
 	builder.Services.AddScoped<FirebaseService>();
+	builder.Services.AddSingleton<EmailVerificationService>();
 }
 
 await builder.Build().RunAsync();

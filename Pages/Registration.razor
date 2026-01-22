@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @inject FirebaseAuthService AuthService
 @inject FirebaseService FirebaseService
+@inject EmailVerificationService EmailVerificationService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Registration</PageTitle>
@@ -91,6 +92,56 @@
 								✓ You have read the complete agreement
 							</MudText>
 						}
+					}
+					else if (question.Type == QuestionType.VerificationCode)
+					{
+						<MudStack Spacing="3">
+							@if (!question.IsVerificationSent)
+							{
+								<MudAlert Severity="Severity.Info" Class="mb-4">
+									We'll send a verification code to your email address to confirm it's valid.
+								</MudAlert>
+								<MudButton Variant="Variant.Filled" Color="Color.Primary"
+									OnClick="@(async () => await SendVerificationCode(question))" Disabled="@question.IsSendingCode"
+									FullWidth="true">
+									@if (question.IsSendingCode)
+									{
+										<MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+										<MudText Class="ms-2">Sending code...</MudText>
+									}
+									else
+									{
+										<MudText>Send Verification Code</MudText>
+									}
+								</MudButton>
+							}
+							else
+							{
+								<MudAlert Severity="Severity.Success" Class="mb-4">
+									Verification code sent! Check your email.
+								</MudAlert>
+								<MudTextField @bind-Value="question.Answer" Label="Enter 6-digit code" Variant="Variant.Outlined"
+									FullWidth="true" Immediate="true" OnKeyUp="HandleKeyPress" Class="question-input"
+									Margin="Margin.Dense" MaxLength="6" InputType="InputType.Number" />
+								@if (!string.IsNullOrEmpty(question.VerificationError))
+								{
+									<MudAlert Severity="Severity.Error" Class="mt-2">
+										@question.VerificationError
+									</MudAlert>
+								}
+								@if (question.IsVerified)
+								{
+									<MudAlert Severity="Severity.Success" Class="mt-2">
+										✓ Email verified successfully!
+									</MudAlert>
+								}
+								<MudButton Variant="Variant.Text" Color="Color.Secondary"
+									OnClick="@(async () => await SendVerificationCode(question))" Disabled="@question.IsSendingCode"
+									Class="mt-2">
+									Resend Code
+								</MudButton>
+							}
+						</MudStack>
 					}
 
 					@if (!string.IsNullOrEmpty(question.HelperText))
@@ -372,6 +423,14 @@
 		},
 		new Question
 		{
+Id = "emailVerification",
+Text = "Verify Your Email",
+Label = "Verification Code",
+Type = QuestionType.VerificationCode,
+Required = true
+},
+new Question
+{
 			Id = "phone",
 			Text = "Phone Number",
 			Label = "Phone Number",
@@ -626,6 +685,7 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			QuestionType.Select => !string.IsNullOrWhiteSpace(question.Answer),
 			QuestionType.Checkbox => question.BoolAnswer,
 			QuestionType.ScrollableText => question.HasScrolledToBottom,
+			QuestionType.VerificationCode => question.IsVerified,
 			_ => false
 		};
 	}
@@ -715,6 +775,106 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		}
 	}
 
+	private async Task SendVerificationCode(Question question)
+	{
+		try
+		{
+			var emailQuestion = questions.FirstOrDefault(q => q.Id == "email");
+			if (emailQuestion == null || string.IsNullOrWhiteSpace(emailQuestion.Answer))
+			{
+				question.VerificationError = "Email not found. Please go back and enter your email.";
+				return;
+			}
+
+			question.IsSendingCode = true;
+			question.VerificationError = string.Empty;
+			StateHasChanged();
+
+			var success = await EmailVerificationService.SendVerificationCodeAsync(emailQuestion.Answer);
+
+			if (success)
+			{
+				question.IsVerificationSent = true;
+				question.VerificationError = string.Empty;
+			}
+			else
+			{
+				question.VerificationError = "Failed to send verification code. Please try again.";
+			}
+		}
+		catch (Exception ex)
+		{
+			question.VerificationError = $"Error sending code: {ex.Message}";
+			Console.WriteLine($"Error sending verification code: {ex.Message}");
+		}
+		finally
+		{
+			question.IsSendingCode = false;
+			StateHasChanged();
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			// Watch for changes to verification code and verify automatically
+			StateHasChanged();
+		}
+
+		// Check if we're on the verification question and code was entered
+		var visibleQuestions = GetVisibleQuestions();
+		if (currentQuestion < visibleQuestions.Count)
+		{
+			var question = visibleQuestions[currentQuestion];
+			if (question.Type == QuestionType.VerificationCode &&
+			!question.IsVerified &&
+			question.IsVerificationSent &&
+			!string.IsNullOrWhiteSpace(question.Answer) &&
+			question.Answer.Length == 6)
+			{
+				await VerifyCode(question);
+			}
+		}
+	}
+
+	private async Task VerifyCode(Question question)
+	{
+		if (question.IsVerifying) return; // Prevent multiple simultaneous verifications
+
+		try
+		{
+			question.IsVerifying = true;
+			var emailQuestion = questions.FirstOrDefault(q => q.Id == "email");
+			if (emailQuestion == null || string.IsNullOrWhiteSpace(emailQuestion.Answer))
+			{
+				question.VerificationError = "Email not found.";
+				return;
+			}
+
+			await Task.Delay(100); // Small delay to debounce
+
+			var (isValid, error) = await EmailVerificationService.VerifyCodeAsync(emailQuestion.Answer, question.Answer);
+
+			if (isValid)
+			{
+				question.IsVerified = true;
+				question.VerificationError = string.Empty;
+			}
+			else
+			{
+				question.VerificationError = error ?? "Invalid or expired code. Please try again.";
+				question.IsVerified = false;
+			}
+
+			StateHasChanged();
+		}
+		finally
+		{
+			question.IsVerifying = false;
+		}
+	}
+
 	public class Question
 	{
 		public string Id { get; set; } = string.Empty;
@@ -729,6 +889,12 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		public bool Required { get; set; }
 		public string ScrollableContent { get; set; } = string.Empty;
 		public bool HasScrolledToBottom { get; set; } = false;
+		// Email verification properties
+		public bool IsVerificationSent { get; set; } = false;
+		public bool IsVerified { get; set; } = false;
+		public bool IsSendingCode { get; set; } = false;
+		public bool IsVerifying { get; set; } = false;
+		public string VerificationError { get; set; } = string.Empty;
 	}
 
 	public enum QuestionType
@@ -739,6 +905,7 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		Date,
 		Select,
 		Checkbox,
-		ScrollableText
+		ScrollableText,
+		VerificationCode
 	}
 }
