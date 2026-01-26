@@ -59,7 +59,7 @@ export async function onRequestPost(context) {
                 <h1 style='color: white; margin: 0; text-align: center;'>Email Verification</h1>
               </div>
               <div style='background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;'>
-                <p style='font-size: 16px; color: #333;'>Thank you for registering for the MFM Americas & Caribbean Youth Convention!</p>
+                <p style='font-size: 16px; color: #333;'>Thank you for verifying your email as part of the sign-up process for the MFM Americas & Caribbean International Convention!</p>
                 <p style='font-size: 16px; color: #333;'>Your verification code is:</p>
                 <div style='background: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;'>
                   <span style='font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 5px;'>${code}</span>
