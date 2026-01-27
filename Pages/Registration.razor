@@ -153,6 +153,60 @@
 							}
 						</MudStack>
 					}
+					else if (question.Type == QuestionType.ButtonChoice)
+					{
+						<MudStack Row="true" Justify="Justify.Center" Spacing="4" Class="mt-4">
+							@foreach (string option in question.Options)
+							{
+								var isSelected = question.Answer == option;
+								<MudButton 
+									Variant="@(isSelected ? Variant.Filled : Variant.Outlined)" 
+									Color="@(isSelected ? Color.Primary : Color.Default)"
+									Size="Size.Large"
+									OnClick="@(() => { question.Answer = option; StateHasChanged(); })"
+									Class="button-choice-btn">
+									@option
+								</MudButton>
+							}
+						</MudStack>
+					}
+					else if (question.Type == QuestionType.MultiSelectGrid)
+					{
+						<MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4" Color="Color.Secondary">
+							@question.HelperText
+						</MudText>
+						<div class="workstream-grid">
+							@foreach (string option in question.Options)
+							{
+								var isSelected = question.SelectedOptions.Contains(option);
+								var isExclusive = option == question.ExclusiveOption;
+								var hasExclusiveSelected = !string.IsNullOrEmpty(question.ExclusiveOption) && question.SelectedOptions.Contains(question.ExclusiveOption);
+								var isDisabled = !isSelected && ((hasExclusiveSelected && !isExclusive) || (!hasExclusiveSelected && question.MaxSelections > 0 && question.SelectedOptions.Count >= question.MaxSelections));
+								
+								<MudButton 
+									Variant="@(isSelected ? Variant.Filled : Variant.Outlined)" 
+									Color="@(isSelected ? Color.Primary : Color.Default)"
+									Disabled="@isDisabled"
+									Class="workstream-btn"
+									OnClick="@(() => ToggleWorkstreamSelection(question, option))">
+									<MudText Typo="Typo.body1" Align="Align.Center">@option</MudText>
+								</MudButton>
+							}
+						</div>
+						@if (question.SelectedOptions.Count > 0)
+						{
+							<MudText Typo="Typo.caption" Align="Align.Center" Class="mt-4" Color="Color.Success">
+								@if (question.SelectedOptions.Contains(question.ExclusiveOption))
+								{
+									<text>✓ Selected: @question.ExclusiveOption</text>
+								}
+								else
+								{
+									<text>✓ Selected @question.SelectedOptions.Count of @question.MaxSelections workstreams</text>
+								}
+							</MudText>
+						}
+					}
 
 					@if (!string.IsNullOrEmpty(question.HelperText))
 					{
@@ -369,6 +423,43 @@
 		background: #555;
 	}
 
+	.button-choice-btn {
+		min-width: 120px;
+		font-weight: 600 !important;
+		transition: all 0.3s ease !important;
+	}
+
+	.button-choice-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+
+	.workstream-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1rem;
+		margin-top: 1.5rem;
+	}
+
+	.workstream-btn {
+		min-height: 80px;
+		padding: 1rem !important;
+		text-transform: none !important;
+		font-weight: 500 !important;
+		transition: all 0.3s ease !important;
+		white-space: normal !important;
+		word-wrap: break-word !important;
+	}
+
+	.workstream-btn:not(:disabled):hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+
+	.workstream-btn:disabled {
+		opacity: 0.4 !important;
+	}
+
 	/* Mobile responsiveness */
 	@@media (max-width: 600px) {
 		.registration-card {
@@ -383,6 +474,20 @@
 		.consent-content {
 			max-height: 250px;
 			padding: 1rem;
+		}
+
+		.button-choice-btn {
+			min-width: 100px;
+		}
+
+		.workstream-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 0.75rem;
+		}
+
+		.workstream-btn {
+			min-height: 70px;
+			font-size: 0.875rem !important;
 		}
 	}
 </style>
@@ -628,6 +733,44 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			Type = QuestionType.Select,
 			Options = ["College Student", "Faculty", "Staff"],
 			Required = true
+		},
+		new Question
+		{
+			Id = "volunteer",
+			Text = "This convention is made possible by the dedication and selfless service of our volunteers. From behind-the-scenes support to on-the-ground coordination, every role plays an important part in creating an environment where lives are impacted and faith is strengthened. We truly cannot make this event happen without your help.\n\nVolunteering is more than just assisting – it is an opportunity to be part of something greater, the willing to serve and support what God is doing through the MFM Youth Ministry, and to help ensure that every attendee has a meaningful and seamless experience.\n\nIf you have a heart to serve and a desire to make a lasting impact, we invite you to sign up to be a volunteer today. Your hands can make a difference. Your heart can change lives. Are you in?",
+			Label = "Would you like to volunteer?",
+			Type = QuestionType.ButtonChoice,
+			Options = ["Sign Me Up", "Not Right Now"],
+			Required = true
+		},
+		new Question
+		{
+			Id = "volunteerWorkstreams",
+			Text = "Volunteer Workstream",
+			Label = "Select workstreams",
+			Type = QuestionType.MultiSelectGrid,
+			Options = [
+				"Music, Talents & Art",
+				"Audiovisual & Technical",
+				"Health & Wellness",
+				"Ushering & Protocol",
+				"Registration & Check-In",
+				"Media & Public Relations",
+				"Food & Hospitality",
+				"Safety & Patrol",
+				"Prayer & Intercession",
+				"Evangelism & Follow-up",
+				"Sanitation & Maintenance",
+				"Sponsorship & Partnership",
+				"Children Department",
+				"Event programming",
+				"Transportation & Logistics",
+				"Vendors & Exhibition"
+			],
+			HelperText = "Please choose one or more areas where you are willing to serve.",
+			MaxSelections = 2,
+			ExclusiveOption = "Music, Talents & Art",
+			Required = true
 		}
 	];
 
@@ -636,6 +779,7 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		var country = questions.FirstOrDefault(q => q.Id == "country")?.Answer;
 		var age = questions.FirstOrDefault(q => q.Id == "age")?.Answer;
 		var collegeAffiliation = questions.FirstOrDefault(q => q.Id == "collegeAffiliation")?.Answer;
+		var volunteerAnswer = questions.FirstOrDefault(q => q.Id == "volunteer")?.Answer;
 
 		return questionId switch
 		{
@@ -653,6 +797,8 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			"collegeAffiliation" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
 			"schoolName" => collegeAffiliation == "Yes" && (age == "18-24" || age == "25-34" || age == "35-44" || age == "45+"),
 			"campusCommunity" => collegeAffiliation == "Yes" && (age == "18-24" || age == "25-34" || age == "35-44" || age == "45+"),
+			"volunteer" => age == "12-17" || age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
+			"volunteerWorkstreams" => volunteerAnswer == "Sign Me Up",
 			_ => true
 		};
 	}
@@ -717,6 +863,8 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			QuestionType.Checkbox => question.BoolAnswer,
 			QuestionType.ScrollableText => question.HasScrolledToBottom,
 			QuestionType.VerificationCode => question.IsVerified,
+			QuestionType.ButtonChoice => !string.IsNullOrWhiteSpace(question.Answer),
+			QuestionType.MultiSelectGrid => question.SelectedOptions.Count > 0,
 			_ => false
 		};
 	}
@@ -906,6 +1054,49 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		}
 	}
 
+	private void ToggleWorkstreamSelection(Question question, string option)
+	{
+		var isExclusive = option == question.ExclusiveOption;
+		
+		if (isExclusive)
+		{
+			// If exclusive option is clicked, clear all others and toggle it
+			if (question.SelectedOptions.Contains(option))
+			{
+				question.SelectedOptions.Remove(option);
+			}
+			else
+			{
+				question.SelectedOptions.Clear();
+				question.SelectedOptions.Add(option);
+			}
+		}
+		else
+		{
+			// Regular option clicked
+			if (question.SelectedOptions.Contains(option))
+			{
+				question.SelectedOptions.Remove(option);
+			}
+			else
+			{
+				// Remove exclusive option if present
+				if (!string.IsNullOrEmpty(question.ExclusiveOption) && question.SelectedOptions.Contains(question.ExclusiveOption))
+				{
+					question.SelectedOptions.Remove(question.ExclusiveOption);
+				}
+				
+				// Add if under max limit
+				if (question.MaxSelections == 0 || question.SelectedOptions.Count < question.MaxSelections)
+				{
+					question.SelectedOptions.Add(option);
+				}
+			}
+		}
+		
+		StateHasChanged();
+	}
+
 	public class Question
 	{
 		public string Id { get; set; } = string.Empty;
@@ -926,6 +1117,10 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		public bool IsSendingCode { get; set; } = false;
 		public bool IsVerifying { get; set; } = false;
 		public string VerificationError { get; set; } = string.Empty;
+		// Multi-select properties
+		public List<string> SelectedOptions { get; set; } = [];
+		public int MaxSelections { get; set; } = 0;
+		public string ExclusiveOption { get; set; } = string.Empty;
 	}
 
 	public enum QuestionType
@@ -937,6 +1132,8 @@ By scrolling to the bottom and proceeding, I/We certify that:
 		Select,
 		Checkbox,
 		ScrollableText,
-		VerificationCode
+		VerificationCode,
+		ButtonChoice,
+		MultiSelectGrid
 	}
 }
