@@ -651,8 +651,8 @@ By scrolling to the bottom and proceeding, I/We certify that:
 			"childName" => age == "3-6" || age == "7-11" || age == "12-17",
 			"maritalStatus" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
 			"collegeAffiliation" => age == "18-24" || age == "25-34" || age == "35-44" || age == "45+",
-			"schoolName" => collegeAffiliation == "Yes",
-			"campusCommunity" => collegeAffiliation == "Yes",
+			"schoolName" => collegeAffiliation == "Yes" && (age == "18-24" || age == "25-34" || age == "35-44" || age == "45+"),
+			"campusCommunity" => collegeAffiliation == "Yes" && (age == "18-24" || age == "25-34" || age == "35-44" || age == "45+"),
 			_ => true
 		};
 	}
