@@ -1,0 +1,29 @@
+{
+	"version": 1,
+	"include": [
+		"/*"
+	],
+	"exclude": [
+		"/_framework/*",
+		"/_content/*",
+		"/css/*",
+		"/lib/*",
+		"/sample-data/*",
+		"/*.js",
+		"/*.css",
+		"/*.wasm",
+		"/*.dll",
+		"/*.json",
+		"/*.png",
+		"/*.ico",
+		"/*.svg",
+		"/*.jpg",
+		"/*.jpeg",
+		"/*.gif",
+		"/*.webp",
+		"/*.woff",
+		"/*.woff2",
+		"/*.ttf",
+		"/*.eot"
+	]
+}

@@ -1,0 +1,6 @@
+{
+	"name": "mymfm-functions",
+	"version": "1.0.0",
+	"description": "Cloudflare Pages Functions for MFM registration",
+	"type": "module"
+}
